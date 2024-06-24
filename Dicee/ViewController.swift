@@ -13,7 +13,7 @@ import UIKit
 class ViewController: UIViewController {
     let diceArray = ["dice1", "dice2", "dice3", "dice4", "dice5", "dice6"]
     let firstDiceRandomizer = CurrentValueSubject<Int, Never>(1)
-    let secondDiceRandomizer = CurrentValueSubject<Int, Never>(6)
+    let secondDiceRandomizer = CurrentValueSubject<Int, Never>(5)
     let timerPublisher = Timer.publish(every: 0.3, on: .main, in: .commonModes).autoconnect()
     
     var firstDiceIndexPublisher: AnyPublisher<Int, Never> {
@@ -43,14 +43,21 @@ class ViewController: UIViewController {
     }
     
     private func startRolling() {
+        firstDiceIndexPublisher
+            .zip(secondDiceIndexPublisher)
+            .sink { completion in
+                print("\(completion)")
+            } receiveValue: { [weak self] _ in
+                self?.updateDiceImages()
+                self?.rotateDices()
+            }
+            .store(in: &bag)
+        
         timerPublisher
-            .zip(firstDiceIndexPublisher, secondDiceIndexPublisher)
             .sink { completion in
                 print("\(completion)")
             } receiveValue: { [weak self] _ in
                 self?.randIndexes()
-                self?.updateDiceImages()
-                self?.rotateDices()
                 self?.ifShouldEndRolling()
             }
             .store(in: &bag)
